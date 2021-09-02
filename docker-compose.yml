@@ -1,0 +1,48 @@
+version: '2.1'
+services:
+    bd:
+        container_name: grancursos-bd
+        image: mysql:5.7
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: grancursos
+            MYSQL_DATABASE: grancursos
+            MYSQL_USER: grancursos
+            MYSQL_PASSWORD: grancursos
+        restart: always
+    servico:
+        container_name: grancursos-servico
+        build:
+            context: .
+            dockerfile: Dockerfile-servico
+        volumes:
+            - ./codigo-fonte/servico:/var/www/html
+        image: gcr.io/plasma-amphora-323417/grancursos-servico
+        ports:
+            - "8081:80"
+        restart: always
+        links:
+            - bd
+        depends_on:
+            - bd
+        healthcheck:
+            test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+            timeout: 10s
+            retries: 10
+    cliente:
+        container_name: grancursos-cliente
+        build:
+            context: .
+            dockerfile: Dockerfile-cliente
+        volumes:
+            - ./codigo-fonte/cliente:/var/www/html
+        image: gcr.io/plasma-amphora-323417/grancursos-cliente
+
+        ports:
+            - "80:8080"
+        restart: always
+        depends_on:
+            - servico
+
+            
